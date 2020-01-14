@@ -21,6 +21,7 @@
 
 void sm_printf(uint8_t dev, const char * format, ...)
 {
+#if 0
     uint8_t  buffer[MAX_SER_BUF_SIZE + 1];
     va_list   vArgs;
 
@@ -35,4 +36,5 @@ void sm_printf(uint8_t dev, const char * format, ...)
     va_end(vArgs);
 
     PRINTF("%s", buffer);
+#endif
 }

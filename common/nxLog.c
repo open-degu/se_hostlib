@@ -59,6 +59,7 @@ static const char *szLevel[] = {"DEBUG", "INFO ", "WARN ", "ERROR"};
 
 void nLog(const char *comp, int level, const char *format, ...)
 {
+#if 0
     va_list vArgs;
     char buffer[256];
     size_t size_buff = sizeof(buffer) / sizeof(buffer[0]) - 1;
@@ -70,6 +71,7 @@ void nLog(const char *comp, int level, const char *format, ...)
     va_end(vArgs);
     reSetColor();
     PRINTF(szEOL);
+#endif
 }
 
 #if 0
@@ -94,6 +96,7 @@ void vLoggingPrintf(const char *pcFormat, ...) {
 
 void nLog_au8(const char *comp, int level, const char *message, const unsigned char *array, size_t array_len)
 {
+#if 0
     size_t i;
     setColor(level);
     PRINTF("%10s:%s:%s (Len=%" PRId32 ")", comp, szLevel[level], message, (int32_t)array_len);
@@ -108,6 +111,7 @@ void nLog_au8(const char *comp, int level, const char *message, const unsigned c
     }
     reSetColor();
     PRINTF(szEOL);
+#endif
 }
 
 static void setColor(int level)
@@ -169,6 +173,7 @@ static void msvc_reSetColor()
 static void ansi_setColor(int level)
 {
 
+#if 0
     switch (level) {
     case NX_LEVEL_ERROR:
         PRINTF(COLOR_RED);
@@ -188,10 +193,13 @@ static void ansi_setColor(int level)
     default:
         PRINTF(COLOR_RESET);
     }
+#endif
 }
 
 static void ansi_reSetColor()
 {
+#if 0
     PRINTF(COLOR_RESET);
+#endif
 }
 #endif

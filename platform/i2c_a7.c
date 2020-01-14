@@ -36,7 +36,14 @@
 #include <i2c.h>
 #endif
 
-#define LOG_I2C 1
+//#define LOG_I2C 1
+#if 1
+#define dbg_print(...)
+#define dbg_perror(...)
+#else
+#define dbg_print(fmt, ...) printf(fmt, __VA_ARGS__)
+#define dbg_perror(fmt, ...) perror(fmt, __VA_ARGS__)
+#endif
 
 #ifdef LINUX
 static int axSmDevice;
@@ -62,69 +69,69 @@ i2c_error_t axI2CInit()
     /*
      * Open the file in /dev/i2c-1
      */
-    printf("I2CInit: opening %s\n", devName);
+    dbg_print("I2CInit: opening %s\n", devName);
 
 #ifdef LINUX
     if ((axSmDevice = open(devName, O_RDWR)) < 0)
     {
-        printf("opening failed...\n");
-        perror("Failed to open the i2c bus");
+        dbg_print("opening failed...\n");
+        dbg_perror("Failed to open the i2c bus");
         return I2C_FAILED;
     }
 
     if (ioctl(axSmDevice, I2C_SLAVE, axSmDevice_addr) < 0)
     {
-        printf("I2C driver failed setting address\n");
+        dbg_print("I2C driver failed setting address\n");
     }
 
     // clear PEC flag
     if (ioctl(axSmDevice, I2C_PEC, 0) < 0)
     {
-        printf("I2C driver: PEC flag clear failed\n");
+        dbg_print("I2C driver: PEC flag clear failed\n");
     }
     else
     {
-        printf("I2C driver: PEC flag cleared\n");
+        dbg_print("I2C driver: PEC flag cleared\n");
     }
 
     // Query functional capacity of I2C driver
     if (ioctl(axSmDevice, I2C_FUNCS, &funcs) < 0)
     {
-        printf("Fatal: Cannot get i2c adapter functionality\n");
+        dbg_print("Fatal: Cannot get i2c adapter functionality\n");
         return I2C_FAILED;
     }
     else
     {
         if (funcs & I2C_FUNC_I2C)
         {
-            printf("I2C driver supports plain i2c-level commands.\n");
+            dbg_print("I2C driver supports plain i2c-level commands.\n");
             if ( (funcs & I2C_FUNC_SMBUS_READ_BLOCK_DATA) == I2C_FUNC_SMBUS_READ_BLOCK_DATA )
             {
-                printf("I2C driver supports Read Block.\n");
+                dbg_print("I2C driver supports Read Block.\n");
             }
             else
             {
-                printf("Fatal: I2C driver does not support Read Block!\n");
+                dbg_print("Fatal: I2C driver does not support Read Block!\n");
                 return I2C_FAILED;
             }
         }
         else
         {
-            printf("Fatal: I2C driver CANNOT support plain i2c-level commands!\n");
+            dbg_print("Fatal: I2C driver CANNOT support plain i2c-level commands!\n");
             return I2C_FAILED;
         }
     }
 #elif defined(ZEPHYR)
     if (!(axSmDevice = device_get_binding(devName)))
     {
-        printf("opening failed...\n");
-        perror("Failed to open the i2c bus");
+        dbg_print("opening failed...\n");
+        dbg_perror("Failed to open the i2c bus");
         return I2C_FAILED;
     }
 
     if (i2c_configure(axSmDevice, I2C_SPEED_SET(I2C_SPEED_STANDARD)) < 0)
     {
-        printf("I2C driver failed setting speed\n");
+        dbg_print("I2C driver failed setting speed\n");
     }
 #endif
 
@@ -137,7 +144,7 @@ i2c_error_t axI2CInit()
 void axI2CTerm(int mode)
 {
     AX_UNUSED_ARG(mode);
-    printf("axI2CTerm: not implemented.\n");
+    dbg_print("axI2CTerm: not implemented.\n");
     return;
 }
 
@@ -155,7 +162,7 @@ i2c_error_t axI2CWriteByte(unsigned char bus, unsigned char addr, unsigned char 
 
     if (bus != I2C_BUS_0)
     {
-        printf("axI2CWriteByte on wrong bus %x (addr %x)\n", bus, addr);
+        dbg_print("axI2CWriteByte on wrong bus %x (addr %x)\n", bus, addr);
     }
 
 #ifdef LINUX
@@ -165,7 +172,7 @@ i2c_error_t axI2CWriteByte(unsigned char bus, unsigned char addr, unsigned char 
 #endif
     if (nrWritten < 0)
     {
-        // printf("Failed writing data (nrWritten=%d).\n", nrWritten);
+        // dbg_print("Failed writing data (nrWritten=%d).\n", nrWritten);
         rv = I2C_FAILED;
     }
     else
@@ -197,15 +204,15 @@ i2c_error_t axI2CWrite(unsigned char bus, unsigned char addr, unsigned char * pT
 
     if (bus != I2C_BUS_0)
     {
-        printf("axI2CWrite on wrong bus %x (addr %x)\n", bus, addr);
+        dbg_print("axI2CWrite on wrong bus %x (addr %x)\n", bus, addr);
     }
 #ifdef LOG_I2C
-    printf("TX (axI2CWrite): ");
+    dbg_print("TX (axI2CWrite): ");
     for (i = 0; i < txLen; i++)
     {
-        printf("%02X ", pTx[i]);
+        dbg_print("%02X ", pTx[i]);
     }
-    printf("\n");
+    dbg_print("\n");
 #endif
 
 #ifdef LINUX
@@ -215,7 +222,7 @@ i2c_error_t axI2CWrite(unsigned char bus, unsigned char addr, unsigned char * pT
 #endif
    if (nrWritten < 0)
    {
-      printf("Failed writing data (nrWritten=%d).\n", nrWritten);
+      dbg_print("Failed writing data (nrWritten=%d).\n", nrWritten);
       rv = I2C_FAILED;
    }
    else
@@ -234,8 +241,8 @@ i2c_error_t axI2CWrite(unsigned char bus, unsigned char addr, unsigned char * pT
 #endif
    }
 #ifdef LOG_I2C
-    printf("    Done with rv = %02x ", rv);
-    printf("\n");
+    dbg_print("    Done with rv = %02x ", rv);
+    dbg_print("\n");
 #endif
 
    return rv;
@@ -255,7 +262,7 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
 
     if (bus != I2C_BUS_0) // change if bus 0 is not the correct bus
     {
-        printf("axI2CWriteRead on wrong bus %x (addr %x)\n", bus, addr);
+        dbg_print("axI2CWriteRead on wrong bus %x (addr %x)\n", bus, addr);
     }
 
 #ifdef LINUX
@@ -287,12 +294,12 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     packets.msgs      = messages;
     packets.nmsgs     = 2;
 #ifdef LOG_I2C
-    printf("TX (%d byte): ", txLen);
+    dbg_print("TX (%d byte): ", txLen);
     for (i = 0; i < txLen; i++)
     {
-        printf("%02X ", packets.msgs[0].buf[i]);
+        dbg_print("%02X ", packets.msgs[0].buf[i]);
     }
-    printf("\n");
+    dbg_print("\n");
 #endif
 
     // Send the request to the kernel and get the result back
@@ -304,11 +311,11 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     if (r < 0)
     {
 #ifdef LOG_I2C
-        printf("axI2CWriteRead: ioctl cmd I2C_RDWR fails with value %d (errno = %d)\n", r, errno);
-        perror("axI2CWriteRead (Errorstring)");
+        dbg_print("axI2CWriteRead: ioctl cmd I2C_RDWR fails with value %d (errno = %d)\n", r, errno);
+        dbg_perror("axI2CWriteRead (Errorstring)");
 #endif
-        // printf("axI2CWriteRead: ioctl cmd I2C_RDWR fails with value %d (errno = %d)\n", r, errno);
-        // perror("axI2CWriteRead (Errorstring)");
+        // dbg_print("axI2CWriteRead: ioctl cmd I2C_RDWR fails with value %d (errno = %d)\n", r, errno);
+        // dbg_perror("axI2CWriteRead (Errorstring)");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0)
 #define E_NACK_I2C_IMX ENXIO
 // #warning "ENXIO"
@@ -319,11 +326,11 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
         // In case of IMX, errno == E_NACK_I2C_IMX is not exclusively bound to NACK on address,
         // it can also signal a NACK on a data byte        
         if (errno == E_NACK_I2C_IMX) {
-            // printf("axI2CWriteRead: ioctl signals NACK (errno = %d)\n", errno);
+            // dbg_print("axI2CWriteRead: ioctl signals NACK (errno = %d)\n", errno);
             return I2C_NACK_ON_ADDRESS;
         }
         else {
-            // printf("axI2CWriteRead: ioctl error (errno = %d)\n", errno);
+            // dbg_print("axI2CWriteRead: ioctl error (errno = %d)\n", errno);
             return I2C_FAILED;
         }
     }
@@ -331,14 +338,14 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     {
         int rlen = packets.msgs[1].buf[0]+1;
 
-        //printf("packets.msgs[1].len is %d \n", packets.msgs[1].len);
+        //dbg_print("packets.msgs[1].len is %d \n", packets.msgs[1].len);
 #ifdef LOG_I2C
-        printf("RX  (%d): ", rlen);
+        dbg_print("RX  (%d): ", rlen);
         for (i = 0; i < rlen; i++)
         {
-            printf("%02X ", packets.msgs[1].buf[i]);
+            dbg_print("%02X ", packets.msgs[1].buf[i]);
         }
-        printf("\n");
+        dbg_print("\n");
 #endif
         for (i = 0; i < rlen; i++)
         {
@@ -348,12 +355,12 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     }
 #elif defined(ZEPHYR)
 #ifdef LOG_I2C
-    printf("TX (%d byte): ", txLen);
+    dbg_print("TX (%d byte): ", txLen);
     for (i = 0; i < txLen; i++)
     {
-        printf("%02X ", messages[0].buf[i]);
+        dbg_print("%02X ", messages[0].buf[i]);
     }
-    printf("\n");
+    dbg_print("\n");
 #endif
 
     // Send the request to the kernel and get the result back
@@ -362,8 +369,8 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     if (r < 0)
     {
 #ifdef LOG_I2C
-        printf("axI2CWriteRead: i2c_transfer fails with value %d\n", r);
-        perror("axI2CWriteRead (Errorstring)");
+        dbg_print("axI2CWriteRead: i2c_transfer fails with value %d\n", r);
+        dbg_perror("axI2CWriteRead (Errorstring)");
 #endif
         return I2C_FAILED;
     }
@@ -371,14 +378,14 @@ i2c_error_t axI2CWriteRead(unsigned char bus, unsigned char addr, unsigned char 
     {
         int rlen = pRx[0]+1;
 
-        //printf("messages[1].len is %d \n", messagese[1].len);
+        //dbg_print("messages[1].len is %d \n", messagese[1].len);
 #ifdef LOG_I2C
-        printf("RX  (%d): ", rlen);
+        dbg_print("RX  (%d): ", rlen);
         for (i = 0; i < rlen; i++)
         {
-            printf("%02X ", pRx[i]);
+            dbg_print("%02X ", pRx[i]);
         }
-        printf("\n");
+        dbg_print("\n");
 #endif
         *pRxLen = rlen;
     }
