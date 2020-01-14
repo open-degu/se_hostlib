@@ -127,12 +127,13 @@ static unsigned short ucToSize(const unsigned char* uc)
 static unsigned int setGpData(const char* str, const unsigned short dataSize,
 						const unsigned short offset)
 {
-	unsigned char data[GP_UNIT_BYTE];
+	unsigned char* data;
 	unsigned short remainSize;
 	unsigned short currentSize;
 	unsigned short sw;
 	unsigned short currentOffset;
 
+	data = (unsigned char*)str;
 	remainSize = dataSize;
 	currentSize = 0;
 	currentOffset = offset;
@@ -144,6 +145,7 @@ static unsigned int setGpData(const char* str, const unsigned short dataSize,
 		if (!isOk(sw)) {
 			return 0;
 		}
+		data += currentSize;
 		currentOffset += currentSize;
 		remainSize -= currentSize;
 	}
