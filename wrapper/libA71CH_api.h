@@ -31,6 +31,7 @@ extern "C" {
 
 	int LIBA71CH_getKeyAndCert(char* key, char* cert);
 	int LIBA71CH_setKeyAndCert(const char* key, const char* cert);
+	int LIBA71CH_hasKeyAndCert();
 	int LIBA71CH_eraseKeyAndCert();
 #ifdef __cplusplus
 }

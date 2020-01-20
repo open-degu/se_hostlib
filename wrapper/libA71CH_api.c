@@ -247,6 +247,36 @@ int LIBA71CH_getKeyAndCert(char* key, char* cert)
 }
 
 /**
+ * @brief	check has Key and Cert
+ * @return	1:has key and cert, 0:no data
+ */
+int LIBA71CH_hasKeyAndCert()
+{
+	unsigned short sw;
+	unsigned short keySize;
+	unsigned short certSize;
+	unsigned char data[GP_UNIT_BYTE];
+
+	/* get length from GP Data slot0 */
+	sw = A71_GetGpData(0, data, GP_UNIT_BYTE);
+	if (!isOk(sw)) {
+		return 0;
+	}
+	keySize = ucToSize(&data[0]);
+	certSize = ucToSize(&data[4]);
+
+	if (!keySize) {
+		return 0;
+	}
+
+	if (!certSize) {
+		return 0;
+	}
+
+	return 1;
+}
+
+/**
  * @brief	set Key and Cert
  * @param	key: key data
  * @param	cert: certificate data
